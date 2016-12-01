@@ -1,8 +1,7 @@
 
 题目2：编写MapReduce，统计`/user/hadoop/mapred_dev/ip_time` 中去重后的IP数，越节省性能越好。（35分）
 
----
-package Test;
+package test;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -23,56 +22,53 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class Test {
-		public static class map extends Mapper<LongWritable, Text, Text, Text>{
+	public static class map extends Mapper<LongWritable, Text, Text, Text>{
 
-			@Override
-			protected void map(LongWritable key, Text value, Context context)
-					throws IOException, InterruptedException {
-				// TODO Auto-generated method stub
-				String line = value.toString();
-				String[] aString = line.split(" ");
-				HashSet<String> hashSet = new HashSet<String>();
-				for(int i=0;i<aString.length;i++){
-					hashSet.add(aString[i]);
-				}
-				for (String string : hashSet) {
-					context.write(new Text(string),new Text("1"));
-					
-				}	
-				
-				
+		@Override
+		protected void map(LongWritable key, Text value, Context context)
+				throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			String line = value.toString();
+			String[] aString = line.split(" ");
+			HashSet<String> hashSet = new HashSet<String>();
+			for(int i=0;i<aString.length;i++){
+				hashSet.add(aString[i]);
 			}
-			
+			for (String string : hashSet) {
+				context.write(new Text(string),new Text("1"));
+			}	
+		}	
+	}
+	public static class reduce extends Reducer<Text, Text, Text, Text>{
+		private static int cou =0;
+		public static void cleanUp(Context context){
+			// TODO Auto-generated method stub
+			Counter counter = (Counter) context.getCounter("Custom Static", "Unique IP");
+			System.out.println("This has "+cou);
+			counter.increment(cou);
 		}
-		public static class reduce extends Reducer<Text, Text, Text, Text>{
-			private static int cou =0;
-			public static void cleanUp(Context context){
-				// TODO Auto-generated method stub
-				Counter counter = (Counter) context.getCounter("Custom Static", "Unique IP");
-				System.out.println("This has "+cou);
-				counter.increment(cou);
-			}
-			@Override
-			protected void reduce(Text key, Iterable<Text> values, Context context)
-					throws IOException, InterruptedException {
-				// TODO Auto-generated method stub
-				cou+= 1;
-				context.write(null, null);
-			}
-			
-		} 
+		@Override
+		protected void reduce(Text key, Iterable<Text> values, Context context)
+				throws IOException, InterruptedException {
+			// TODO Auto-generated method stub
+			cou+= 1;
+			context.write(null, null);
+		}
 		
-		public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
-			  Configuration conf =new Configuration();
-			   Job job =Job.getInstance(conf,"IP");
-			   job.setJarByClass(map.class);
-			   job.setMapperClass(map.class);
-			   job.setMapOutputKeyClass(Text.class);
-			   job.setMapOutputValueClass(Text.class);
-			   FileInputFormat.addInputPath(job, new Path(args[0]));
-			   FileOutputFormat.setOutputPath(job, new Path(args[1]));
-			   job.waitForCompletion(true);
-			   Long linenumber=job.getCounters().findCounter("org.apache.hadoop.mapreduce.TaskCounter","REDUCE_OUTPUT_RECORDS").getValue();
+	} 
+	
+	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
+		  Configuration conf =new Configuration();
+		   Job job =Job.getInstance(conf,"IP");
+		   job.setJarByClass(map.class);
+		   job.setMapperClass(map.class);
+		   job.setMapOutputKeyClass(Text.class);
+		   job.setMapOutputValueClass(Text.class);
+		   FileInputFormat.addInputPath(job, new Path(args[0]));
+		   FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		   job.waitForCompletion(true);
+		   Long linenumber=job.getCounters().findCounter
+		   ("org.apache.hadoop.mapreduce.TaskCounter","REDUCE_OUTPUT_RECORDS").getValue();
 		}
 		
 }
