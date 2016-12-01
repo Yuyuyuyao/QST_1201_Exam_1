@@ -2,6 +2,8 @@
 题目2：编写MapReduce，统计`/user/hadoop/mapred_dev/ip_time` 中去重后的IP数，越节省性能越好。（35分）
 
 ---
+package Test;
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
